@@ -192,15 +192,14 @@ class Tract:
         self.right_junction[0] = self.left[0] * self.glottis["reflection"] + parameterSamples["glottis"]
         self.left_junction[self.length] = self.right[self.length - 1] * self.lip["reflection"]
 
-        # for index in range(self.length):
-        #     if index == 0:
-        #         continue
-        #     interpolation = interpolate(bufferInterpolation, self.reflection[index], self.reflection_new[index])
-        #     print(interpolation)
-        #     offset = interpolation * (self.right[index-1] + self.left[index])
-        #
-        #     self.right_junction[index] = self.right[index-1] - offset
-        #     self.left_junction[index] = self.left[index] + offset
+        for index in range(self.length):
+            if index == 0:
+                continue
+            interpolation = interpolate(bufferInterpolation, self.reflection[index], self.reflection_new[index])
+            offset = interpolation * (self.right[index-1] + self.left[index])
+
+            self.right_junction[index] = self.right[index-1] - offset
+            self.left_junction[index] = self.left[index] + offset
 
 
         leftInterpolation = interpolate(bufferInterpolation, self.left_reflection_new, self.left_reflection['value'])
@@ -215,20 +214,20 @@ class Tract:
         self.nose.right_junction[0] = noseInterpolation * self.nose.left[0] + (noseInterpolation + 1) * (
                 self.left[self.nose.start] + self.right[self.nose.start - 1])
 
-        self.right = [i * 0.999 for i in self.right_junction[:-1]]
-        self.left = [i * 0.999 for i in self.left_junction[:-1]]
-
-        if updateAmplitudes:
-            suma = np.abs(self.left + self.right)
-            self.amplitude_max = [i if i > j else j*0.999 for i, j in zip(suma, self.amplitude_max)]
-
-        # for index in range(self.length):
-        #     self.right[index] = self.right_junction[index] * 0.999
-        #     self.left[index] = self.left_junction[index + 1] * 0.999
+        # self.right = [i * 0.999 for i in self.right_junction[:-1]]
+        # self.left = [i * 0.999 for i in self.left_junction[:-1]]
         #
-        #     if updateAmplitudes:
-        #         suma = np.abs(self.left[index] + self.right[index])
-        #         self.amplitude_max[index] = suma if (suma > self.amplitude_max[index]) else self.amplitude_max[index] * 0.999
+        # if updateAmplitudes:
+        #     suma = np.abs(self.left + self.right)
+        #     self.amplitude_max = [i if i > j else j*0.999 for i, j in zip(suma, self.amplitude_max)]
+
+        for index in range(self.length):
+            self.right[index] = self.right_junction[index] * 0.999
+            self.left[index] = self.left_junction[index + 1] * 0.999
+
+            if updateAmplitudes:
+                suma = np.abs(self.left[index] + self.right[index])
+                self.amplitude_max[index] = suma if (suma > self.amplitude_max[index]) else self.amplitude_max[index] * 0.999
 
 
         return self.right[self.length - 1]
@@ -237,38 +236,38 @@ class Tract:
 
         self.nose.left_junction[self.nose.length] = self.nose.right[self.nose.length - 1] * self.lip['reflection']
 
-        aux_nose_right = [0] + self.nose.right[:-1]
+        # aux_nose_right = [0] + self.nose.right[:-1]
 
-        offset = np.array(self.nose.reflection) * (np.array(self.nose.left) + np.array(aux_nose_right))
-        self.nose.left_junction = [0] + list(self.nose.left + offset)
-        self.nose.right_junction = [0] + list(aux_nose_right - offset)
+        # offset = np.array(self.nose.reflection) * (np.array(self.nose.left) + np.array(aux_nose_right))
+        # self.nose.left_junction = [0] + list(self.nose.left + offset)
+        # self.nose.right_junction = [0] + list(aux_nose_right - offset)
 
-        # for index in range(self.nose.length):
-        #     if index == 0:
-        #         continue
+        for index in range(self.nose.length):
+            if index == 0:
+                continue
+
+            offset = self.nose.reflection[index] * (self.nose.left[index] + self.nose.right[index-1])
+
+            self.nose.left_junction[index] = self.nose.left[index] + offset
+            self.nose.right_junction[index] = self.nose.right[index-1] - offset
+
+        # aux_nose_left = self.nose.left[1:] + [0]
+
+        # self.nose.left = list(np.array(aux_nose_left) * np.array(self.nose.fade))
+        # self.nose.right = [i * self.nose.fade for i in self.nose.right_junction[:-1]]
         #
-        #     offset = self.nose.reflection[index] * (self.nose.left[index] + self.nose.right[index-1])
-        #
-        #     self.nose.left_junction[index] = self.nose.left[index] + offset
-        #     self.nose.right_junction[index] = self.nose.right[index-1] - offset
+        # if (updateAmplitudes):
+        #     suma = np.abs(np.array(self.nose.left) + np.array(self.nose.right))
+        #     self.nose.amplitude_max = [i if i > j else j * 0.999 for i, j in zip(suma, self.nose.amplitude_max)]
 
-        aux_nose_left = self.nose.left[1:] + [0]
+        for index in range(self.nose.length):
 
-        self.nose.left = list(np.array(aux_nose_left) * np.array(self.nose.fade))
-        self.nose.right = [i * self.nose.fade for i in self.nose.right_junction[:-1]]
+            self.nose.left[index] = self.nose.left_junction[index+1] * self.nose.fade
+            self.nose.right[index] = self.nose.right_junction[index] * self.nose.fade
 
-        if (updateAmplitudes):
-            suma = np.abs(np.array(self.nose.left) + np.array(self.nose.right))
-            self.nose.amplitude_max = [i if i > j else j * 0.999 for i, j in zip(suma, self.nose.amplitude_max)]
-
-        # for index in range(self.nose.length):
-        #
-        #     self.nose.left[index] = self.nose.left_junction[index+1] * self.nose.fade
-        #     self.nose.right[index] = self.nose.right_junction[index] * self.nose.fade
-        #
-        #     if (updateAmplitudes):
-        #         suma = np.abs(self.nose.left[index] + self.nose.right[index])
-        #         self.nose.amplitude_max[index] = suma if suma > self.nose.amplitude_max[index] else self.nose.amplitude_max[index] * 0.999
+            if (updateAmplitudes):
+                suma = np.abs(self.nose.left[index] + self.nose.right[index])
+                self.nose.amplitude_max[index] = suma if suma > self.nose.amplitude_max[index] else self.nose.amplitude_max[index] * 0.999
 
 
         return self.nose.right[self.nose.length - 1];
@@ -278,7 +277,7 @@ class Tract:
         for index in range(self.length):
             self.amplitude.append(self.diameter[index] ** 2)
 
-            if self.reflection:
+            if index > 0:
                 self.reflection[index] = self.reflection_new[index]
                 self.reflection_new[index] = 0.999 if (self.amplitude[index] == 0) else (self.amplitude[index - 1] - self.amplitude[index]) / (
                             self.amplitude[index - 1] + self.amplitude[index])

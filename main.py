@@ -16,8 +16,8 @@ if __name__ == "__main__":
     for i in tqdm(range(int(sampleRate * duration / 128))):
         for sampleIndex in range(bufferLength):
             seconds = currentTime + (sampleIndex/sampleRate)
-            sample = processor.fast_process(params,
-                                       sampleIndex=0,
+            sample = processor.process(params,
+                                       sampleIndex=sampleIndex,
                                        bufferLength=bufferLength,
                                        seconds=seconds)
             out.append(sample)

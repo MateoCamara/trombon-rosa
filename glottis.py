@@ -72,8 +72,6 @@ class Glottis:
             interpolation = self.startSeconds / period
             self._updateCoefficients(tenseness)
 
-        outputSample = 0
-
         noiseModulator = self._getNoiseModulator(interpolation)
         noiseModulator += ((1 - (tenseness * intensity)) * 3)
         parameterSamples['noiseModulator'] = noiseModulator
